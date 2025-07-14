@@ -1,0 +1,48 @@
+.user-list {
+  list-style: none;
+  padding: 0;
+}
+
+.user-list li {
+  background: #f9f9f9;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: background 0.2s;
+}
+
+.user-list li:hover {
+  background: #e9ecef;
+}
+
+.user-list button {
+  padding: 5px 10px;
+  margin-left: 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.user-list button:first-child {
+  background: #ffc107;
+  color: #212529;
+}
+
+.user-list button:last-child {
+  background: #dc3545;
+  color: #fff;
+}
+
+.user-list button:first-child:hover {
+  background: #e0a800;
+}
+
+.user-list button:last-child:hover {
+  background: #c82333;
+}
