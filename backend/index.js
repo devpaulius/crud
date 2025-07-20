@@ -1,67 +1,55 @@
 const express = require('express');
-const mysql = require('mysql2');
-const bodyParser = require('body-parser');
 const cors = require('cors');
+require('dotenv').config();
+const ensureAdmin = require('./setup/adminUser');
+
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const postRoutes = require('./routes/postRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const statsController = require('./controllers/statsController');
+
+// DB
+require('./config/db');
 
 const app = express();
+
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Database connection
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'crud'
+ensureAdmin();
+
+// Routes
+app.use('/auth', authRoutes);
+app.use('/posts', postRoutes);
+app.use('/admin', adminRoutes);
+app.use('/users', userRoutes);
+app.use('/categories', categoryRoutes);
+
+// Basic stats endpoint for post/user count
+const db = require('./config/db');
+app.get('/stats', async (req, res) => {
+  try {
+    db.query('SELECT COUNT(*) AS post_count FROM posts', (err1, posts) => {
+      if (err1) throw err1;
+      db.query('SELECT COUNT(*) AS user_count FROM users', (err2, users) => {
+        if (err2) throw err2;
+        res.json({
+          post_count: posts[0].post_count,
+          user_count: users[0].user_count
+        });
+      });
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-db.connect(err => {
-  if (err) throw err;
-  console.log('MySQL Connected...');
-});
 
-// CRUD routes
+app.get('/stats/likes-average', statsController.getLikesAverage);
 
-// Get all users
-app.get('/users', (req, res) => {
-  db.query('SELECT * FROM users', (err, results) => {
-    if (err) throw err;
-    res.json(results);
-  });
-});
-
-// Get single user
-app.get('/users/:id', (req, res) => {
-  db.query('SELECT * FROM users WHERE id = ?', [req.params.id], (err, results) => {
-    if (err) throw err;
-    res.json(results[0]);
-  });
-});
-
-// Create user
-app.post('/users', (req, res) => {
-  const { name, email } = req.body;
-  db.query('INSERT INTO users (name, email) VALUES (?, ?)', [name, email], (err, result) => {
-    if (err) throw err;
-    res.json({ id: result.insertId, name, email });
-  });
-});
-
-// Update user
-app.put('/users/:id', (req, res) => {
-  const { name, email } = req.body;
-  db.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, req.params.id], (err, result) => {
-    if (err) throw err;
-    res.json({ id: req.params.id, name, email });
-  });
-});
-
-// Delete user
-app.delete('/users/:id', (req, res) => {
-  db.query('DELETE FROM users WHERE id = ?', [req.params.id], (err, result) => {
-    if (err) throw err;
-    res.json({ message: 'Deleted' });
-  });
-});
-
-app.listen(5000, () => console.log('Server running on port 5000'));
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ API running on port ${PORT}`));

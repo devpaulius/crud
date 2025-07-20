@@ -1,41 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import UserForm from '../components/UserForm';
-import UserList from '../components/UserList';
-import { getUsers, createUser, updateUser, deleteUser } from '../services/userService';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/api';
+import { useAuth } from '../context/AuthContext';
+import LikesAverage from '../components/LikesAverage';
 
 export default function Home() {
-  const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({ name: '', email: '' });
-  const [editingId, setEditingId] = useState(null);
 
-  const fetch = () => getUsers().then(res => setUsers(res.data));
+  const { user } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
-  useEffect(() => { fetch(); }, []);
-
-  const handleSubmit = e => {
-    e.preventDefault();
-    const promise = editingId
-      ? updateUser(editingId, form)
-      : createUser(form);
-    promise.then(() => {
-      fetch();
-      setForm({ name: '', email: '' });
-      setEditingId(null);
-    });
+  const fetchPosts = () => {
+    API.get('/posts', { params: { search } }).then(res => setPosts(res.data));
   };
 
-  const handleEdit = u => {
-    setForm({ name: u.name, email: u.email });
-    setEditingId(u.id);
+  useEffect(() => {
+    fetchPosts();
+  }, [search]);
+
+  const likePost = (id) => {
+    API.post(`/posts/${id}/like`).then(fetchPosts);
   };
-  const handleDelete = id => deleteUser(id).then(fetch);
+
+  const deletePost = (id) => {
+    API.delete(`/posts/${id}`).then(fetchPosts);
+  };
 
   return (
     <div>
-      <img src="/src/assets/images/logo.jpg" alt="Logo" width={100}/>
-      {/* Comp */}
-      <UserForm form={form} onChange={setForm} onSubmit={handleSubmit} isEditing={!!editingId} />
-      <UserList users={users} onEdit={handleEdit} onDelete={handleDelete} />
+      <h2>Posts</h2>
+      <input 
+        placeholder="Search..." 
+        value={search} 
+        onChange={e => setSearch(e.target.value)}
+      />
+      {user && (
+        <div style={{ margin: '1em 0' }}>
+          <button onClick={() => navigate('/new-post')}>Create New Post</button>
+        </div>
+      )}
+      {posts.map(post => (
+        <div key={post.id} style={{ border: '1px solid #ddd', padding: 10, margin: 10 }}>
+          <h3>{post.title}</h3>
+          <p>{post.content}</p>
+          <p>Likes: {post.likes}</p>
+          <p>Category: {post.categoryName || 'None'}</p>
+          <LikesAverage />
+          {user && (
+            <div>
+              <button onClick={() => likePost(post.id)}>Like</button>
+              {user.username === post.createdBy && (
+                <>
+                  <Link to={`/edit-post/${post.id}`}><button>Edit</button></Link>
+                  <button onClick={() => deletePost(post.id)}>Delete</button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
