@@ -12,6 +12,7 @@ import NewPost from './pages/NewPost';
 import EditPost from './pages/EditPost';
 import Stats from './pages/Stats';
 import AdminPanel from './pages/AdminPanel';
+import PublicProfile from './pages/PublicProfile';
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/edit-post/:id" element={<EditPost />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/admin/*" element={<AdminPanel />} />
+          <Route path="/user/:id" element={<PublicProfile />} />
         </Routes>
         <Footer />
       </BrowserRouter>

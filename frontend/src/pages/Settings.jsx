@@ -6,77 +6,69 @@ export default function Settings() {
   const { user } = useAuth();
   const [settings, setSettings] = useState({
     theme_preference: 'light',
-    acknowledged: false
+    acknowledged: false,
+    public_profile: true
   });
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
+  const [msg, setMsg] = useState('');
 
   useEffect(() => {
     if (user) {
       API.get(`/users/${user.id}/settings`)
-        .then(res => {
-          setSettings({
-            theme_preference: res.data.theme_preference || 'light',
-            acknowledged: !!res.data.acknowledged
-          });
-        })
+        .then(r => setSettings(r.data))
         .finally(() => setLoading(false));
     }
   }, [user]);
 
   useEffect(() => {
-  document.body.className = settings.theme_preference;
-}, [settings.theme_preference]);
+    document.body.className = settings.theme_preference;
+  }, [settings.theme_preference]);
 
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setSettings(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+  const handleChange = e => {
+    const { name, type, checked, value } = e.target;
+    setSettings(s => ({ ...s, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleSave = () => {
+  const save = () =>
     API.put(`/users/${user.id}/settings`, settings)
-      .then(() => setMessage('Settings updated successfully'))
-      .catch(() => setMessage('Failed to update settings'));
-  };
+      .then(() => setMsg('Saved'))
+      .catch(() => setMsg('Error'));
 
-  if (!user) return <p>Please login</p>;
-  if (loading) return <p>Loading...</p>;
+  if (!user)   return <p>Please login</p>;
+  if (loading) return <p>Loading…</p>;
 
   return (
     <div>
       <h2>Settings</h2>
-      <div>
-        <label>
-          Theme:
-          <select
-            name="theme_preference"
-            value={settings.theme_preference}
-            onChange={handleChange}
-          >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-      </div>
 
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            name="acknowledged"
-            checked={settings.acknowledged}
-            onChange={handleChange}
-          />{' '}
-          Acknowledged Terms
-        </label>
-      </div>
+      <label>
+        Theme:
+        <select name="theme_preference" value={settings.theme_preference} onChange={handleChange}>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
 
-      <button onClick={handleSave}>Save Settings</button>
-      {message && <p>{message}</p>}
+      <label>
+        <input
+          type="checkbox"
+          name="acknowledged"
+          checked={settings.acknowledged}
+          onChange={handleChange}
+        /> I acknowledge terms
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          name="public_profile"
+          checked={settings.public_profile}
+          onChange={handleChange}
+        /> Public profile
+      </label>
+
+      <button onClick={save}>Save</button>
+      {msg && <p>{msg}</p>}
     </div>
   );
 }

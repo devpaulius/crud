@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   ip_address VARCHAR(45),
   theme_preference VARCHAR(10) DEFAULT 'light',
   is_admin BOOLEAN DEFAULT false,
+  public_profile BOOLEAN DEFAULT true,
   blocked BOOLEAN DEFAULT false
 );
 

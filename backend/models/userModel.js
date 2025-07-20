@@ -3,9 +3,12 @@ const db = require('../config/db');
 const UserModel = {
   findById(id, callback) {
     db.query(
-      'SELECT id, username, email, first_name, last_name, middle_name FROM users WHERE id = ?',
+      'SELECT id, username, email, first_name, last_name, middle_name, public_profile FROM users WHERE id = ?',
       [id],
-      callback
+      (err, rows) => {
+        if (err) return callback(err);
+        callback(null, rows[0]);
+      }
     );
   },
 
@@ -43,17 +46,17 @@ const UserModel = {
     db.query('UPDATE users SET blocked = 0 WHERE id = ?', [id], callback);
   },
 
-  updateSettings(userId, theme, acknowledged, ip, callback) {
+  updateSettings(userId, theme, acknowledged, ip, publicProfile, callback) {
     db.query(
-      'UPDATE users SET theme_preference = ?, acknowledged = ?, ip_address = ? WHERE id = ?',
-      [theme, acknowledged, ip, userId],
+      'UPDATE users SET theme_preference = ?, acknowledged = ?, ip_address = ?, public_profile = ? WHERE id = ?',
+      [theme, acknowledged, ip, publicProfile, userId],
       callback
     );
   },
 
   getSettings(userId, callback) {
     db.query(
-      'SELECT theme_preference, acknowledged, ip_address FROM users WHERE id = ?',
+      'SELECT theme_preference, acknowledged, ip_address, public_profile FROM users WHERE id = ?',
       [userId],
       callback
     );
@@ -65,24 +68,7 @@ const UserModel = {
       [first_name, last_name, middle_name, email, id],
       callback
     );
-  },
-
-  getSettings(userId, callback) {
-    db.query(
-      'SELECT theme_preference, acknowledged FROM users WHERE id = ?',
-      [userId],
-      callback
-    );
-  },
-
-  updateSettings(userId, theme, acknowledged, ip, callback) {
-    db.query(
-      'UPDATE users SET theme_preference = ?, acknowledged = ?, ip_address = ? WHERE id = ?',
-      [theme, acknowledged, ip, userId],
-      callback
-    );
   }
-
 };
 
 module.exports = UserModel;
